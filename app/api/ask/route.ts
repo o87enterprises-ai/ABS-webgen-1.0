@@ -131,7 +131,7 @@ USE THIS EXACT SRC: src="${img.url}"`;
             { role: "system", content: systemPrompt },
             { role: "user", content: userPrompt }
           ],
-          maxTokens: 8192,  // Higher limit for complete HTML pages
+          maxTokens: 16384,  // High limit for multi-page designs with animations
           temperature: 0.6,  // Lower for more consistent code
           topP: 0.95,
           frequencyPenalty: 0.1,  // Reduce repetition
@@ -291,7 +291,7 @@ export async function PUT(request: NextRequest) {
           content: prompt,
         },
       ],
-      maxTokens: 8192,  // Higher limit for complete HTML updates
+      maxTokens: 16384,  // High limit for multi-page designs with animations
       temperature: 0.6,  // Lower for more consistent code
       topP: 0.95,
       frequencyPenalty: 0.1,  // Reduce repetition

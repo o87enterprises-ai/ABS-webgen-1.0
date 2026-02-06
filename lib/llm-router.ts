@@ -70,8 +70,9 @@ function buildTierConfig(): LLMTier[] {
       url: process.env.CUSTOM_LLM_BASE_URL,
       apiKey: process.env.CUSTOM_LLM_API_KEY,
       model: process.env.CUSTOM_LLM_MODEL!,
-      // Longer timeout for cloud routing (Ollama → DeepSeek can take time)
-      timeout: parseInt(process.env.TIER1_TIMEOUT || '180000', 10), // 3 minutes default
+      // Very long timeout for complex multi-page generation
+      // Set to 30 minutes (1800000ms) - effectively no timeout for most use cases
+      timeout: parseInt(process.env.TIER1_TIMEOUT || '1800000', 10), // 30 minutes default
       enabled: true,
       isOllama,
     });
@@ -87,7 +88,7 @@ function buildTierConfig(): LLMTier[] {
       name: 'Tier 2: HF Serverless',
       type: 'serverless',
       model: process.env.TIER2_MODEL || 'deepseek-ai/deepseek-coder-1.3b-instruct',
-      timeout: parseInt(process.env.TIER2_TIMEOUT || '60000', 10),
+      timeout: parseInt(process.env.TIER2_TIMEOUT || '600000', 10), // 10 minutes
       enabled: true,
     });
   }
@@ -114,8 +115,8 @@ async function callTier1(
   const optimizedParams = {
     model: tier.model,
     messages: request.messages,
-    // DeepSeek V3 supports up to 64K context, use higher limits for quality
-    max_tokens: request.maxTokens || 8192,
+    // DeepSeek V3 supports up to 64K context, use higher limits for multi-page designs
+    max_tokens: request.maxTokens || 16384,
     // Slightly lower temperature for more consistent code generation
     temperature: request.temperature ?? 0.6,
     // Top-p sampling for better quality
