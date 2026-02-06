@@ -1,0 +1,205 @@
+# DeepSite - Quick Reference Card
+
+## 🚀 5-Minute Startup
+
+```bash
+# 1. Get HF token at https://huggingface.co/settings/tokens
+# 2. Edit .env.local and add your token
+# 3. Start server
+npm run dev
+
+# 4. Open in browser
+open http://localhost:3000/new
+```
+
+---
+
+## 📁 File Map
+
+| File | Purpose |
+|------|---------|
+| **START_HERE.md** | 👈 Read this first - complete overview |
+| **SETUP_GUIDE.md** | Detailed setup & integration guide |
+| **INTEGRATION_EXAMPLES.md** | Working code examples |
+| **QUICKSTART.md** | Original installation guide |
+| **.env.local** | ⚠️ Add your HF token here |
+| **extract-prompts.js** | Extract prompts for other tools |
+| **deepsite-prompts.json** | Extracted prompts (JSON) |
+| **deepsite-prompts.md** | Extracted prompts (docs) |
+
+---
+
+## 🔑 Key Files in Codebase
+
+| File | Line | What It Does |
+|------|------|--------------|
+| `app/api/ask/route.ts` | 67-89 | Token configuration |
+| `lib/prompts.ts` | 23-69 | Initial system prompt (the magic) |
+| `lib/prompts.ts` | 71-151 | Follow-up edit prompt |
+| `lib/providers.ts` | 41-105 | Supported AI models |
+| `lib/best-provider.ts` | 1-22 | Auto-select best provider |
+
+---
+
+## 💡 Common Use Cases
+
+### Use DeepSite As-Is
+✅ Add HF token → Run `npm run dev` → Done!
+
+### Extract Prompts for Claude Desktop
+```bash
+node extract-prompts.js
+# Use deepsite-prompts.json in your MCP server
+```
+
+### Use with Anthropic API
+See **INTEGRATION_EXAMPLES.md** section "Standalone Script with Anthropic API"
+
+### Use with Local LLM
+See **INTEGRATION_EXAMPLES.md** section "Local LLM (Ollama) Integration"
+
+---
+
+## 🎯 Decision Tree
+
+```
+Do you want AI website generation?
+│
+├─ YES, with DeepSite's UI
+│  └─ ✅ Use DeepSite as-is (just add HF token)
+│
+├─ YES, but with Claude/GPT-4
+│  └─ ⚡ Extract prompts, use in your own scripts
+│
+└─ YES, as part of my IDE workflow
+   ├─ Claude Desktop → Build MCP server (see INTEGRATION_EXAMPLES.md)
+   ├─ VS Code → Extract prompts, use in extension
+   └─ Qwen Code → Extract prompts, create custom integration
+```
+
+---
+
+## 🔧 Troubleshooting Cheat Sheet
+
+| Problem | Solution |
+|---------|----------|
+| AI not responding | Add HF token to `.env.local` |
+| Port 3000 in use | `lsof -ti:3000 \| xargs kill -9` |
+| "No content returned" | Try different model |
+| Rate limited | Add HF token or upgrade to HF Pro |
+| Module errors | `rm -rf node_modules && npm install` |
+| Build fails | `rm -rf .next && npm run dev` |
+
+---
+
+## 📊 Model Comparison
+
+| Model | Speed | Quality | Cost | Best For |
+|-------|-------|---------|------|----------|
+| **DeepSeek V3** | ⚡⚡⚡ | ⭐⭐⭐⭐ | $ | General web dev |
+| **Qwen3-Coder** | ⚡⚡ | ⭐⭐⭐⭐⭐ | $$ | Complex coding |
+| **Kimi K2** | ⚡⚡ | ⭐⭐⭐⭐ | $$ | Creative designs |
+
+---
+
+## 🎨 Example Prompts
+
+**Landing Pages:**
+```
+Create a landing page for a SaaS product with hero section,
+features grid, pricing table, testimonials, and footer
+```
+
+**Web Apps:**
+```
+Create a todo list app with add, edit, delete, and mark complete.
+Use local storage to persist data.
+```
+
+**Portfolios:**
+```
+Create a portfolio website for a photographer with full-screen hero,
+masonry gallery grid, about section, and contact form
+```
+
+**Dashboards:**
+```
+Create a dark mode analytics dashboard with sidebar navigation,
+stats cards, charts using Chart.js, and data table
+```
+
+---
+
+## 🔗 Important Links
+
+- **Get HF Token**: https://huggingface.co/settings/tokens
+- **DeepSite Space**: https://huggingface.co/spaces/AnkhLP--deepsite
+- **MCP Docs**: https://modelcontextprotocol.io
+- **Anthropic API**: https://docs.anthropic.com
+- **Ollama Models**: https://ollama.com/library
+
+---
+
+## 🎯 The Most Important Thing
+
+**DeepSite's value is in its PROMPT ENGINEERING, not the specific AI provider.**
+
+You can use the prompts from `lib/prompts.ts` with ANY AI:
+- Claude (Anthropic)
+- GPT-4 (OpenAI)
+- Local models (Ollama)
+- Hugging Face (original)
+
+The prompts are what make the AI generate clean, responsive, production-quality code.
+
+---
+
+## ⚡ Quick Commands
+
+```bash
+# Start development
+npm run dev
+
+# Build for production
+npm run build && npm start
+
+# Extract prompts
+node extract-prompts.js
+
+# Kill process on port 3000
+lsof -ti:3000 | xargs kill -9
+
+# Check for updates
+npm outdated
+
+# Security audit
+npm audit
+```
+
+---
+
+## 📝 Environment Variables
+
+```bash
+# Required
+HF_TOKEN=hf_your_token_here
+
+# Optional
+DEFAULT_HF_TOKEN=hf_fallback_token
+MONGODB_URI=mongodb://localhost:27017/deepsite
+```
+
+---
+
+## 🎓 Learning Path
+
+1. **Day 1**: Get DeepSite working locally
+2. **Day 2**: Generate 5-10 different websites to understand capabilities
+3. **Day 3**: Run `node extract-prompts.js` and study the prompts
+4. **Day 4**: Try using extracted prompts with Claude/GPT-4
+5. **Day 5**: Build your own integration (MCP server, script, etc.)
+
+---
+
+**Generated by Claude Code**
+**All documentation ready - just add your HF token and go!** 🚀
