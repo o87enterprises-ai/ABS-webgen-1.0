@@ -6,7 +6,6 @@ import {
   Upload,
   X,
 } from "lucide-react";
-import Image from "next/image";
 
 import {
   Popover,
@@ -16,12 +15,13 @@ import {
 import { Button } from "@/components/ui/button";
 import Loading from "@/components/loading";
 import { useAi } from "@/hooks/useAi";
+import { toast } from "sonner";
 
 export interface UploadedImage {
   id: string;
   name: string;
-  dataUrl: string;
-  file: File;
+  previewUrl: string; // Small base64 for preview display
+  serverUrl: string;  // Server path like /uploads/123.png for LLM
 }
 
 interface ImageUploadNewProps {
@@ -29,6 +29,42 @@ interface ImageUploadNewProps {
   setUploadedImages: (images: UploadedImage[] | ((prev: UploadedImage[]) => UploadedImage[])) => void;
   disabled?: boolean;
 }
+
+// Create a small preview thumbnail (max 100x100)
+const createPreviewThumbnail = (file: File): Promise<string> => {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const maxSize = 100;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxSize) {
+            height *= maxSize / width;
+            width = maxSize;
+          }
+        } else {
+          if (height > maxSize) {
+            width *= maxSize / height;
+            height = maxSize;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', 0.7));
+      };
+      img.src = reader.result as string;
+    };
+    reader.readAsDataURL(file);
+  });
+};
 
 export const ImageUploadNew = ({
   uploadedImages,
@@ -50,31 +86,56 @@ export const ImageUploadNew = ({
     for (const file of Array.from(files)) {
       if (!file.type.startsWith('image/')) continue;
 
-      // Convert to base64 data URL
-      const dataUrl = await new Promise<string>((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.readAsDataURL(file);
-      });
+      try {
+        // Upload to server
+        const formData = new FormData();
+        formData.append('file', file);
 
-      newImages.push({
-        id: `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        name: file.name,
-        dataUrl,
-        file,
-      });
+        const response = await fetch('/api/upload-image', {
+          method: 'POST',
+          body: formData,
+        });
+
+        const result = await response.json();
+
+        if (!result.ok) {
+          toast.error(`Failed to upload ${file.name}: ${result.error}`);
+          continue;
+        }
+
+        // Create small preview thumbnail for display
+        const previewUrl = await createPreviewThumbnail(file);
+
+        const imageId = `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+        newImages.push({
+          id: imageId,
+          name: file.name,
+          previewUrl,
+          serverUrl: result.url, // e.g., /uploads/123-abc.png
+        });
+
+        // Auto-select the newly uploaded image
+        setSelectedFiles([...selectedFiles, imageId]);
+      } catch (error) {
+        console.error('Upload error:', error);
+        toast.error(`Failed to upload ${file.name}`);
+      }
     }
 
-    setUploadedImages(prev => [...prev, ...newImages]);
+    if (newImages.length > 0) {
+      setUploadedImages(prev => [...prev, ...newImages]);
+      toast.success(`Uploaded ${newImages.length} image(s)`);
+    }
+
     setIsProcessing(false);
   };
 
   const removeImage = (id: string) => {
     setUploadedImages(prev => prev.filter(img => img.id !== id));
     // Also remove from selected files if it was selected
-    const imageToRemove = uploadedImages.find(img => img.id === id);
-    if (imageToRemove && selectedFiles.includes(imageToRemove.id)) {
-      setSelectedFiles(selectedFiles.filter(f => f !== imageToRemove.id));
+    if (selectedFiles.includes(id)) {
+      setSelectedFiles(selectedFiles.filter(f => f !== id));
     }
   };
 
@@ -85,6 +146,9 @@ export const ImageUploadNew = ({
       setSelectedFiles([...selectedFiles, id]);
     }
   };
+
+  // Count selected images (only temp- prefixed IDs are uploaded images)
+  const selectedImageCount = selectedFiles.filter(f => f.startsWith('temp-')).length;
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -136,7 +200,7 @@ export const ImageUploadNew = ({
                     onClick={() => toggleSelectImage(image.id)}
                   >
                     <img
-                      src={image.dataUrl}
+                      src={image.previewUrl}
                       alt={image.name}
                       className="object-cover w-full rounded-md aspect-square border-2 border-white hover:border-blue-400 transition-all"
                     />
@@ -165,10 +229,10 @@ export const ImageUploadNew = ({
             )}
           </div>
 
-          {selectedFiles.length > 0 && (
+          {selectedImageCount > 0 && (
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
               <p className="text-xs text-blue-700">
-                <strong>{selectedFiles.length}</strong> image(s) selected - these will be included in your design
+                <strong>{selectedImageCount}</strong> image(s) selected - these will be included in your design
               </p>
             </div>
           )}
@@ -183,7 +247,7 @@ export const ImageUploadNew = ({
               {isProcessing ? (
                 <>
                   <Loading overlay={false} className="ml-2 size-4 animate-spin" />
-                  Processing...
+                  Uploading...
                 </>
               ) : (
                 <>
@@ -201,7 +265,7 @@ export const ImageUploadNew = ({
               onChange={(e) => handleFileUpload(e.target.files)}
             />
             <p className="text-xs text-neutral-400 mt-2">
-              Supports PNG, JPG, GIF, SVG. Images will be embedded as base64.
+              Supports PNG, JPG, GIF, SVG. Images are saved to server.
             </p>
           </div>
         </main>

@@ -138,7 +138,7 @@ export const useAi = (onScrollToBottom?: () => void) => {
     enhancedSettings?: EnhancedSettings,
     redesignMarkdown?: string,
     isLoggedIn?: boolean,
-    imageData?: Array<{ name: string; dataUrl: string }>
+    imageData?: Array<{ name: string; url: string }>
   ) => {
     if (isAiWorking) return;
     if (!redesignMarkdown && !prompt.trim()) return;

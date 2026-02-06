@@ -91,7 +91,7 @@ export const FakeAskAi = () => {
                   className="flex items-center gap-1.5 bg-neutral-700 rounded-md px-2 py-1"
                 >
                   <img
-                    src={img.dataUrl}
+                    src={img.previewUrl || img.serverUrl}
                     alt={img.name}
                     className="size-5 rounded object-cover"
                   />

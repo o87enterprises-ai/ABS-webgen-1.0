@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
 
 I am providing ${images.length} image(s) that MUST be included in the design. This is NOT optional.
 
-${images.map((img: { name: string; dataUrl: string }, i: number) => {
+${images.map((img: { name: string; url: string }, i: number) => {
   const isLogo = img.name.toLowerCase().includes('logo');
   const placement = isLogo
     ? 'Place this logo in the HEADER/NAVBAR of every page, and optionally in the footer.'
@@ -65,15 +65,14 @@ ${images.map((img: { name: string; dataUrl: string }, i: number) => {
 
   return `### IMAGE ${i + 1}: "${img.name}"
 ${placement}
-USE THIS EXACT SRC (copy the entire string):
-src="${img.dataUrl}"`;
+USE THIS EXACT SRC: src="${img.url}"`;
 }).join('\n\n')}
 
 **MANDATORY REQUIREMENTS:**
-1. You MUST use <img> tags with the EXACT src="data:image/..." strings provided above
-2. Do NOT use placeholder images or URLs - use ONLY the data URLs I provided
+1. You MUST use <img> tags with the EXACT src paths provided above (e.g., src="/uploads/...")
+2. Do NOT use placeholder images like picsum.photos or unsplash - use ONLY the paths I provided
 3. If an image is named "logo" or similar, it MUST appear in the header/navbar
-4. Copy the ENTIRE data URL exactly - do not truncate or modify it
+4. Use the paths exactly as given - they will work in the generated HTML
 
 ---
 

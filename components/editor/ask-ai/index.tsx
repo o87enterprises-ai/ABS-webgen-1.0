@@ -153,14 +153,14 @@ The images are provided as base64 data URLs. Embed them directly in the HTML usi
     return enhancedPrompt;
   };
 
-  // Get base64 images for the API call
+  // Get image URLs for the API call
   const getImageDataForApi = () => {
     const selectedImageIds = selectedFiles.filter(f => f.startsWith('temp-'));
     return uploadedImages
       .filter(img => selectedImageIds.includes(img.id))
       .map(img => ({
         name: img.name,
-        dataUrl: img.dataUrl,
+        url: img.serverUrl, // Use server URL instead of base64
       }));
   };
 
@@ -306,7 +306,7 @@ The images are provided as base64 data URLs. Embed them directly in the HTML usi
                   className="flex items-center gap-1.5 bg-neutral-700 rounded-md px-2 py-1"
                 >
                   <img
-                    src={img.dataUrl}
+                    src={img.previewUrl || img.serverUrl}
                     alt={img.name}
                     className="size-5 rounded object-cover"
                   />

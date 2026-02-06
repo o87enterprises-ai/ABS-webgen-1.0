@@ -36,6 +36,10 @@ Thumbs.db
 .deepsite-logs/
 .deepsite.pids
 
+# Uploaded images (generated at runtime)
+public/uploads/*
+!public/uploads/.gitkeep
+
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
