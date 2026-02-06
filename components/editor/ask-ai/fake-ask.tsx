@@ -11,9 +11,11 @@ import classNames from "classnames";
 import { PROMPTS_FOR_AI } from "@/lib/prompts";
 import { ImageUploadNew, UploadedImage } from "./image-upload-new";
 import { PageTemplates, PageTemplate } from "./page-templates";
+import { useAi } from "@/hooks/useAi";
 
 export const FakeAskAi = () => {
   const router = useRouter();
+  const { selectedFiles, setSelectedFiles } = useAi(); // Use the shared selectedFiles state
   const [prompt, setPrompt] = useState("");
   const [openProvider, setOpenProvider] = useState(false);
   const [enhancedSettings, setEnhancedSettings, removeEnhancedSettings] =
@@ -30,7 +32,6 @@ export const FakeAskAi = () => {
 
   // Image uploads
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
-  const [selectedImageIds, setSelectedImageIds] = useState<string[]>([]);
 
   // Page template selection
   const [selectedTemplate, setSelectedTemplate] = useState<PageTemplate | null>(null);
@@ -38,7 +39,9 @@ export const FakeAskAi = () => {
   const callAi = async () => {
     setPromptStorage(prompt);
     // Store images and template in localStorage for the /new page
-    const selectedImages = uploadedImages.filter(img => selectedImageIds.includes(img.id));
+    // Use selectedFiles from useAi hook (set by ImageUploadNew component)
+    const selectedImages = uploadedImages.filter(img => selectedFiles.includes(img.id));
+    console.log('Storing images:', selectedImages.length, 'from', uploadedImages.length, 'total');
     setImagesStorage(selectedImages);
     setTemplateStorage(selectedTemplate);
     router.push("/new");
@@ -54,28 +57,8 @@ export const FakeAskAi = () => {
     }, 400);
   };
 
-  // Get selected images for display
-  const selectedImages = uploadedImages.filter(img => selectedImageIds.includes(img.id));
-
-  // Handle image selection toggle
-  const handleImageSelect = (imageId: string) => {
-    setSelectedImageIds(prev =>
-      prev.includes(imageId)
-        ? prev.filter(id => id !== imageId)
-        : [...prev, imageId]
-    );
-  };
-
-  // Handle image upload - auto-select new images
-  const handleImagesChange = (images: UploadedImage[] | ((prev: UploadedImage[]) => UploadedImage[])) => {
-    const resolvedImages = typeof images === 'function' ? images(uploadedImages) : images;
-    const newImages = resolvedImages.filter(img => !uploadedImages.find(u => u.id === img.id));
-    setUploadedImages(resolvedImages);
-    // Auto-select newly uploaded images
-    if (newImages.length > 0) {
-      setSelectedImageIds(prev => [...prev, ...newImages.map(img => img.id)]);
-    }
-  };
+  // Get selected images for display (use selectedFiles from useAi hook)
+  const selectedImages = uploadedImages.filter(img => selectedFiles.includes(img.id));
 
   return (
     <div className="p-3 w-full max-w-xl mx-auto">
@@ -99,7 +82,7 @@ export const FakeAskAi = () => {
                     {img.name}
                   </span>
                   <button
-                    onClick={() => setSelectedImageIds(selectedImageIds.filter(id => id !== img.id))}
+                    onClick={() => setSelectedFiles(selectedFiles.filter(id => id !== img.id))}
                     className="text-neutral-400 hover:text-neutral-200"
                   >
                     ×
@@ -172,7 +155,7 @@ export const FakeAskAi = () => {
             />
             <ImageUploadNew
               uploadedImages={uploadedImages}
-              setUploadedImages={handleImagesChange}
+              setUploadedImages={setUploadedImages}
               disabled={false}
             />
             <PageTemplates
