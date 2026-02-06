@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import classNames from "classnames";
 import { ArrowUp, ChevronDown, CircleStop, Dice6 } from "lucide-react";
 import { useLocalStorage, useUpdateEffect, useMount } from "react-use";
@@ -82,6 +82,10 @@ export const AskAi = ({
   // Page template selection
   const [selectedTemplate, setSelectedTemplate] = useState<PageTemplate | null>(null);
 
+  // Track if we should auto-call AI after loading stored data
+  const [shouldAutoCall, setShouldAutoCall] = useState(false);
+  const [imagesLoaded, setImagesLoaded] = useState(false);
+
   useMount(() => {
     // Load stored images from homepage
     if (isNew && storedImages && storedImages.length > 0) {
@@ -89,15 +93,31 @@ export const AskAi = ({
       setSelectedFiles(storedImages.map(img => img.id));
       removeStoredImages();
     }
+    setImagesLoaded(true); // Mark images as loaded (even if empty)
+
     // Load stored template from homepage
     if (isNew && storedTemplate) {
       setSelectedTemplate(storedTemplate);
       removeStoredTemplate();
     }
+
+    // Mark that we should auto-call if there's a stored prompt
     if (promptStorage && promptStorage.trim() !== "") {
-      callAi();
+      setShouldAutoCall(true);
     }
   });
+
+  // Auto-call AI after images have been loaded into state
+  useEffect(() => {
+    if (shouldAutoCall && imagesLoaded && prompt.trim()) {
+      setShouldAutoCall(false); // Prevent re-triggering
+      // Small delay to ensure state is fully updated
+      const timer = setTimeout(() => {
+        callAi();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [shouldAutoCall, imagesLoaded, uploadedImages]);
 
   // Build the enhanced prompt with images and template info
   const buildEnhancedPrompt = (basePrompt: string): string => {

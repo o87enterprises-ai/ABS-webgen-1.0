@@ -49,20 +49,42 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  let rewrittenPrompt = redesignMarkdown ? `Here is my current design as a markdown:\n\n${redesignMarkdown}\n\nNow, please create a new design based on this markdown. Use the images in the markdown.` : prompt;
+  let rewrittenPrompt = "";
 
-  // Add uploaded images to the prompt if provided
+  // Add uploaded images FIRST and with strong emphasis
   if (images && Array.isArray(images) && images.length > 0) {
-    rewrittenPrompt += `\n\n## User-Provided Images:
-The user has uploaded ${images.length} image(s) to include in the design. Use these images in appropriate places:
+    rewrittenPrompt = `## CRITICAL: USER-PROVIDED IMAGES - YOU MUST USE THESE
 
-${images.map((img: { name: string; dataUrl: string }, i: number) =>
-  `### Image ${i + 1}: "${img.name}"
-Use this exact src attribute in an img tag: src="${img.dataUrl}"`
-).join('\n\n')}
+I am providing ${images.length} image(s) that MUST be included in the design. This is NOT optional.
 
-IMPORTANT: Use the exact data URLs provided above for the src attributes. Do not modify or abbreviate them.`;
+${images.map((img: { name: string; dataUrl: string }, i: number) => {
+  const isLogo = img.name.toLowerCase().includes('logo');
+  const placement = isLogo
+    ? 'Place this logo in the HEADER/NAVBAR of every page, and optionally in the footer.'
+    : 'Use this image prominently in the design where appropriate.';
+
+  return `### IMAGE ${i + 1}: "${img.name}"
+${placement}
+USE THIS EXACT SRC (copy the entire string):
+src="${img.dataUrl}"`;
+}).join('\n\n')}
+
+**MANDATORY REQUIREMENTS:**
+1. You MUST use <img> tags with the EXACT src="data:image/..." strings provided above
+2. Do NOT use placeholder images or URLs - use ONLY the data URLs I provided
+3. If an image is named "logo" or similar, it MUST appear in the header/navbar
+4. Copy the ENTIRE data URL exactly - do not truncate or modify it
+
+---
+
+## USER REQUEST:
+`;
   }
+
+  // Add the main prompt
+  rewrittenPrompt += redesignMarkdown
+    ? `Here is my current design as a markdown:\n\n${redesignMarkdown}\n\nNow, please create a new design based on this markdown. Use the images in the markdown.`
+    : prompt;
 
   if (enhancedSettings?.isActive) {
     // rewrittenPrompt = await rewritePrompt(rewrittenPrompt, enhancedSettings, { token, billTo }, selectedModel.value, selectedProvider.provider);

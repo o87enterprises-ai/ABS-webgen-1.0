@@ -1,0 +1,42 @@
+{
+  "tags": {
+    "SEARCH_START": "<<<<<<< SEARCH",
+    "DIVIDER": "=======",
+    "REPLACE_END": ">>>>>>> REPLACE",
+    "TITLE_PAGE_START": "<<<<<<< START_TITLE ",
+    "TITLE_PAGE_END": " >>>>>>> END_TITLE",
+    "NEW_PAGE_START": "<<<<<<< NEW_PAGE_START ",
+    "NEW_PAGE_END": " >>>>>>> NEW_PAGE_END",
+    "UPDATE_PAGE_START": "<<<<<<< UPDATE_PAGE_START ",
+    "UPDATE_PAGE_END": " >>>>>>> UPDATE_PAGE_END",
+    "PROJECT_NAME_START": "<<<<<<< PROJECT_NAME_START ",
+    "PROJECT_NAME_END": " >>>>>>> PROJECT_NAME_END"
+  },
+  "config": {
+    "MAX_REQUESTS_PER_IP": 4
+  },
+  "systemPrompts": {
+    "INITIAL_SYSTEM_PROMPT": null,
+    "FOLLOW_UP_SYSTEM_PROMPT": null,
+    "PROMPT_FOR_IMAGE_GENERATION": null,
+    "PROMPT_FOR_PROJECT_NAME": null
+  },
+  "examples": [
+    "Create a landing page for a SaaS product, with a hero section, a features section, a pricing section, and a call to action section.",
+    "Create a portfolio website for a designer, with a hero section, a projects section, a about section, and a contact section.",
+    "Create a blog website for a writer, with a hero section, a blog section, a about section, and a contact section.",
+    "Create a Tic Tac Toe game, with a game board, a history section, and a score section.",
+    "Create a Weather App, with a search bar, a weather section, and a forecast section.",
+    "Create a Calculator, with a calculator section, and a history section.",
+    "Create a Todo List, with a todo list section, and a history section.",
+    "Create a Calendar, with a calendar section, and a history section.",
+    "Create a Music Player, with a music player section, and a history section.",
+    "Create a Quiz App, with a quiz section, and a history section.",
+    "Create a Pomodoro Timer, with a timer section, and a history section.",
+    "Create a Notes App, with a notes section, and a history section.",
+    "Create a Task Manager, with a task list section, and a history section.",
+    "Create a Password Generator, with a password generator section, and a history section.",
+    "Create a Currency Converter, with a currency converter section, and a history section.",
+    "Create a Dictionary, with a dictionary section, and a history section."
+  ]
+}

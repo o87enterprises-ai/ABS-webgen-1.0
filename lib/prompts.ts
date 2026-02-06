@@ -213,7 +213,8 @@ IMPORTANT:
 - First file MUST be named index.html
 - No explanations needed - just return the code
 - Avoid Chinese characters unless requested
-- Focus on EXCEPTIONAL design quality - make it portfolio-worthy`;
+- Focus on EXCEPTIONAL design quality - make it portfolio-worthy
+- **USER-PROVIDED IMAGES**: If the user provides images (logos, photos, etc.) with base64 data URLs, you MUST use them exactly as provided. Place logos in the header/navbar. Use the EXACT data URL string - do not shorten, modify, or replace with placeholders.`;
 
 export const FOLLOW_UP_SYSTEM_PROMPT = `You are an expert UI/UX Designer and Front-End Developer modifying existing HTML files.
 Apply changes to enhance or extend the website based on user requests.
