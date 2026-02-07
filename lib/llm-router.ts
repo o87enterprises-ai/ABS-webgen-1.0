@@ -47,48 +47,74 @@ interface LLMTier {
 }
 
 /**
+ * Ollama cloud model fallback chain (in order of speed/reliability)
+ * These are free cloud models routed through Ollama
+ */
+const OLLAMA_CLOUD_FALLBACKS = [
+  { model: 'gemini-3-flash-preview:cloud', name: 'Gemini Flash', timeout: 300000 },   // 5 min - fastest
+  { model: 'gpt-oss:20b-cloud', name: 'GPT-OSS 20B', timeout: 600000 },               // 10 min - fast
+  { model: 'gpt-oss:120b-cloud', name: 'GPT-OSS 120B', timeout: 900000 },             // 15 min - medium
+  { model: 'deepseek-v3.1:671b-cloud', name: 'DeepSeek V3 671B', timeout: 1800000 },  // 30 min - slowest but best
+];
+
+/**
  * Build tier configuration from environment variables
- * Optimized for Ollama → DeepSeek routing
+ * With automatic fallbacks for Ollama cloud models
  */
 function buildTierConfig(): LLMTier[] {
   const tiers: LLMTier[] = [];
 
-  // Tier 1: Ollama (Local) → DeepSeek Cloud (Primary)
-  // This is the most cost-effective option
-  const tier1Enabled = !!(
-    process.env.CUSTOM_LLM_BASE_URL &&
-    process.env.CUSTOM_LLM_MODEL
-  );
+  const baseUrl = process.env.CUSTOM_LLM_BASE_URL;
+  const primaryModel = process.env.CUSTOM_LLM_MODEL;
+  const apiKey = process.env.CUSTOM_LLM_API_KEY;
 
-  if (tier1Enabled) {
-    const isOllama = process.env.CUSTOM_LLM_BASE_URL?.includes('localhost:11434') ||
-                     process.env.CUSTOM_LLM_BASE_URL?.includes('127.0.0.1:11434');
+  const isOllama = baseUrl?.includes('localhost:11434') || baseUrl?.includes('127.0.0.1:11434');
 
+  if (baseUrl && primaryModel) {
+    // Add the primary configured model first
+    const primaryTimeout = parseInt(process.env.TIER1_TIMEOUT || '600000', 10);
     tiers.push({
-      name: isOllama ? 'Tier 1: Ollama → DeepSeek' : 'Tier 1: Custom LLM',
+      name: `Primary: ${primaryModel}`,
       type: 'space',
-      url: process.env.CUSTOM_LLM_BASE_URL,
-      apiKey: process.env.CUSTOM_LLM_API_KEY,
-      model: process.env.CUSTOM_LLM_MODEL!,
-      // Very long timeout for complex multi-page generation
-      // Set to 30 minutes (1800000ms) - effectively no timeout for most use cases
-      timeout: parseInt(process.env.TIER1_TIMEOUT || '1800000', 10), // 30 minutes default
+      url: baseUrl,
+      apiKey,
+      model: primaryModel,
+      timeout: primaryTimeout,
       enabled: true,
       isOllama,
     });
+
+    // If using Ollama, add cloud model fallbacks automatically
+    if (isOllama) {
+      for (const fallback of OLLAMA_CLOUD_FALLBACKS) {
+        // Skip if it's the same as the primary model
+        if (fallback.model === primaryModel) continue;
+
+        tiers.push({
+          name: `Fallback: ${fallback.name}`,
+          type: 'space',
+          url: baseUrl,
+          apiKey,
+          model: fallback.model,
+          timeout: fallback.timeout,
+          enabled: true,
+          isOllama: true,
+        });
+      }
+    }
   }
 
-  // Tier 2: HuggingFace Serverless Inference (Fast Fallback)
+  // Tier 2: HuggingFace Serverless Inference (Last resort fallback)
   const tier2Enabled =
     process.env.TIER2_ENABLED !== 'false' &&
     !!(process.env.HF_TOKEN);
 
   if (tier2Enabled) {
     tiers.push({
-      name: 'Tier 2: HF Serverless',
+      name: 'HF Serverless (Last Resort)',
       type: 'serverless',
       model: process.env.TIER2_MODEL || 'deepseek-ai/deepseek-coder-1.3b-instruct',
-      timeout: parseInt(process.env.TIER2_TIMEOUT || '600000', 10), // 10 minutes
+      timeout: parseInt(process.env.TIER2_TIMEOUT || '600000', 10),
       enabled: true,
     });
   }
@@ -266,7 +292,8 @@ export async function generateWithLLM(request: LLMRequest): Promise<LLMResponse>
 
   // Log request info
   const totalPromptChars = request.messages.reduce((acc, m) => acc + m.content.length, 0);
-  console.log(`🚀 LLM Request: ${request.messages.length} messages, ~${totalPromptChars} chars, max_tokens=${request.maxTokens || 8192}`);
+  console.log(`🚀 LLM Request: ${request.messages.length} messages, ~${totalPromptChars} chars, max_tokens=${request.maxTokens || 16384}`);
+  console.log(`📋 Fallback chain: ${tiers.map(t => t.name).join(' → ')}`);
 
   for (const tier of tiers) {
     if (!tier.enabled) {
